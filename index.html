@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RetailFlow — Premium retail shop management dashboard with inventory, sales, purchases, expenses, returns tracking, and low stock alerts.">
+    <title>RetailFlow — Premium Shop Management</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/db.js"></script>
+</head>
+<body>
+
+    <!-- ======================== SIDEBAR ======================== -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            </div>
+            <div class="logo-text">RetailFlow</div>
+        </div>
+
+        <ul class="nav-links">
+            <li class="active" data-tab="dashboard">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span data-i18n="nav-dashboard">Dashboard</span>
+                <span class="nav-bell-badge" id="bell-count" style="display:none;">0</span>
+            </li>
+            <li data-tab="inventory">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                <span data-i18n="nav-inventory">Inventory</span>
+            </li>
+            <li data-tab="purchases">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                <span data-i18n="nav-purchases">Purchases</span>
+            </li>
+            <li data-tab="sales">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <span data-i18n="nav-sales">Sales</span>
+            </li>
+            <li data-tab="expenses">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span data-i18n="nav-expenses">Expenses</span>
+            </li>
+            <li data-tab="suppliers">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span data-i18n="nav-suppliers">Suppliers</span>
+            </li>
+            <li data-tab="customers">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span data-i18n="nav-customers">Customers</span>
+            </li>
+            <li data-tab="returns">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4m1 5h2a2 2 0 012 2v1a2 2 0 01-2 2H9a2 2 0 01-2-2v-1a2 2 0 012-2zm8-10a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span data-i18n="nav-returns">Returns</span>
+            </li>
+            <li data-tab="reports">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 2v-6m-9-3h18a2 2 0 012 2v12a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2z"></path></svg>
+                <span data-i18n="nav-reports">Reports</span>
+            </li>
+            <li data-tab="settings">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span data-i18n="nav-settings">Settings</span>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer" data-i18n="sidebar-footer">
+            RetailFlow v2.0<br>
+            © 2026 Premium Edition
+        </div>
+    </aside>
+
+    <!-- ======================== MAIN CONTENT ======================== -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h1 id="topbar-title">Dashboard</h1>
+            <div class="topbar-actions">
+                <div class="lang-switcher" style="margin-right:12px;">
+                    <select id="lang-select" style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:8px; font-size:0.85rem; font-weight:500; cursor:pointer; outline:none; transition:var(--transition);">
+                        <option value="en">English (EN)</option>
+                        <option value="bn">বাংলা (BN)</option>
+                    </select>
+                </div>
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-primary); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; outline:none; transition:var(--transition); margin-right:12px;" title="Toggle Theme">
+                    <svg id="theme-toggle-dark-icon" style="width:16px;height:16px;display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg id="theme-toggle-light-icon" style="width:16px;height:16px;display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </button>
+                <button id="btn-export-pdf" class="btn-pdf" data-i18n="btn-export-pdf">
+                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Export PDF
+                </button>
+                <div class="date-indicator" id="current-date">Loading...</div>
+                
+                <!-- Dynamic Session Profile Widget -->
+                <div id="user-profile-widget" style="display: none; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 12px;">
+                    <div style="text-align: right; line-height: 1.2;">
+                        <div id="nav-user-name" style="font-size: 0.8rem; font-weight: 600; color: #fff;">Loading...</div>
+                        <div id="nav-user-role" class="badge" style="padding: 1px 4px; font-size: 0.62rem; margin-top: 1px; text-transform: uppercase;">...</div>
+                    </div>
+                    <button id="btn-logout" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239,68,68,0.15); color: var(--danger); padding: 5px 10px; font-size: 0.72rem; border-radius: 6px; font-weight: 700; cursor: pointer; height:28px; line-height:1; margin:0; transition: var(--transition);">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-body">
+
+            <!-- =========== LOGIN PAGE =========== -->
+            <section id="login" class="page active" style="max-width: 440px; margin: 40px auto; padding: 20px;">
+                <div style="background: var(--bg-surface); backdrop-filter: blur(var(--card-blur)); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; box-shadow: 0 4px 12px var(--primary-glow);">
+                            <svg style="width:26px; height:26px; color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <h2 style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 800; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">RetailFlow</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Sign in to access your shop dashboard</p>
+                    </div>
+
+                    <form id="login-form" style="display: flex; flex-direction: column; gap: 16px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label for="login-email" style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Email Address</label>
+                            <input type="email" id="login-email" required placeholder="name@shop.com">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label for="login-password" style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Password</label>
+                            <input type="password" id="login-password" required placeholder="••••••••">
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: -4px;">
+                            <span style="color: var(--primary-light); cursor: pointer;" id="btn-toggle-signup">Don't have an account? Sign Up</span>
+                        </div>
+
+                        <button type="submit" class="btn-add" style="padding: 12px; margin-top: 8px; font-weight: 700;">Sign In 🔑</button>
+                    </form>
+
+                    <form id="signup-form" style="display: none; flex-direction: column; gap: 16px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label for="signup-name" style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Full Name</label>
+                            <input type="text" id="signup-name" required placeholder="Jane Doe">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label for="signup-email" style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Email Address</label>
+                            <input type="email" id="signup-email" required placeholder="name@shop.com">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label for="signup-password" style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Password</label>
+                            <input type="password" id="signup-password" required placeholder="••••••••">
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: -4px;">
+                            <span style="color: var(--primary-light); cursor: pointer;" id="btn-toggle-login">Already have an account? Log In</span>
+                        </div>
+
+                        <button type="submit" class="btn-add" style="padding: 12px; margin-top: 8px; font-weight: 700;">Create Account 🚀</button>
+                    </form>
+
+                    <!-- Diagnostics Panel -->
+                    <div id="diagnostics-panel" style="display: none; margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; font-size: 0.82rem; font-family: monospace; color: var(--danger);">
+                        <div style="font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; font-family: var(--font-primary);">
+                            <span>⚠️ DIAGNOSTICS LOG</span>
+                            <span style="cursor: pointer; text-decoration: underline;" onclick="document.getElementById('diagnostics-panel').style.display='none'">Dismiss</span>
+                        </div>
+                        <div id="diagnostics-error" style="white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; line-height: 1.4;"></div>
+                        
+                        <!-- Offline Mode Switch Trigger -->
+                        <div id="diagnostics-offline-trigger" style="margin: 10px 0; display: none;">
+                            <button id="btn-diagnostics-run-offline" type="button" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s; font-family: var(--font-primary);">
+                                💻 Sandbox Block Detected: Switch to Offline Mode
+                            </button>
+                        </div>
+
+                        <div style="border-top: 1px solid rgba(239, 68, 68, 0.15); padding-top: 8px; color: var(--text-secondary); font-family: var(--font-primary);">
+                            <strong>Suggested Checklist:</strong>
+                            <ul style="margin: 5px 0 0 15px; padding: 0; display: flex; flex-direction: column; gap: 4px;">
+                                <li>Is your Supabase SQL schema initialized? (Ensure you executed `schema.sql`).</li>
+                                <li>If signing up: Is email confirmation enabled in Supabase? (Disable it under Auth > Providers > Email > Confirm email).</li>
+                                <li>Is the Supabase project active and URL correct?</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Connected Server Status & Reset -->
+                    <div id="connection-status-widget" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-primary);">
+                        <div>
+                            <span>Connected to Supabase Project:</span>
+                            <strong id="connected-url-label" style="color: var(--text-primary); display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">Loading...</strong>
+                        </div>
+                        <button id="btn-reset-connection" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger); padding: 5px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: var(--font-primary);">
+                            Reset URL 🔄
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========== DASHBOARD =========== -->
+            <section id="dashboard" class="page">
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-today-sales">Today's Sales</h3>
+                            <div class="amount" id="dash-today-sales">৳ 0</div>
+                            <div id="dash-today-vs-yesterday" style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 3px; font-weight: 500;">vs yesterday: ৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card purple">
+                        <div class="card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-net-sales">Net Sales</h3>
+                            <div class="amount" id="dash-total-sales">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card danger">
+                        <div class="card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-investment">Net Investment</h3>
+                            <div class="amount" id="dash-investment">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card warning">
+                        <div class="card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-expenses">Total Expenses</h3>
+                            <div class="amount" id="dash-expenses">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card warning-due" style="border-left: 4px solid var(--warning);">
+                        <div class="card-icon" style="color:var(--warning);background:var(--warning-glow);">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-dues">Outstanding Dues</h3>
+                            <div class="amount" id="dash-outstanding-dues" style="color:var(--warning);">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card success">
+                        <div class="card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-profit">Net Profit</h3>
+                            <div class="amount" id="dash-profit">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #06b6d4;">
+                        <div class="card-icon" style="color:#06b6d4;background:rgba(6,182,212,0.15);">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-customers">Total Customers</h3>
+                            <div class="amount" id="dash-total-customers">0</div>
+                        </div>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #ec4899;">
+                        <div class="card-icon" style="color:#ec4899;background:rgba(236,72,153,0.15);">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        </div>
+                        <div class="card-details">
+                            <h3 data-i18n="kpi-suppliers">Total Suppliers</h3>
+                            <div class="amount" id="dash-total-suppliers">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-overview">📊 Business Overview</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="businessChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-expenses-pie">💰 Expense Breakdown</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="expensePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="margin-top: 24px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-sales-category">🍕 Sales by Category</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="salesCategoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-due-customers">⚖️ Due Customers (Sorted by Amount Owed)</span>
+                        </div>
+                        <div id="due-customers-panel" style="max-height: 260px; overflow-y: auto; display:flex; flex-direction:column; gap:8px; padding:10px;">
+                            <div style="text-align:center;padding:24px;color:var(--text-muted);">No outstanding dues!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="margin-top: 24px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-top-selling">🏆 Top 5 Best Selling Products</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="topSellingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" data-i18n="panel-weekly-trend">📈 Weekly Sales Trend (Last 7 Days)</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="weeklySalesTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title danger-title" style="margin-top:24px;">
+                    <span class="icon">🔔</span> <span data-i18n="panel-low-stock-title">Low Stock Alerts</span>
+                </h3>
+                <div class="panel" style="margin-top:8px;">
+                    <div id="low-stock-panel">
+                        <div style="text-align:center;padding:24px;color:var(--text-muted);">Loading...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========== INVENTORY =========== -->
+            <section id="inventory" class="page">
+                <!-- Low Stock Banner -->
+                <div class="alert-banner" id="inv-low-stock-banner"></div>
+
+                <!-- Stats -->
+                <div class="inventory-stats">
+                    <div class="stat-card shadow-primary">
+                        <div class="stat-card-icon text-primary">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Unique Products</h4>
+                            <div class="stat-card-value" id="inv-stat-items">0 Products</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-success">
+                        <div class="stat-card-icon text-success">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Stock</h4>
+                            <div class="stat-card-value" id="inv-stat-qty">0 Units</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-warning">
+                        <div class="stat-card-icon text-warning">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Stock Value</h4>
+                            <div class="stat-card-value" id="inv-stat-valuation">৳ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Product Form -->
+                <div class="form-container">
+                    <div class="form-group" style="min-width:120px;">
+                        <label for="inv-id">Product ID</label>
+                        <input type="text" id="inv-id" placeholder="e.g., P001" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="inv-name">Product Name</label>
+                        <input type="text" id="inv-name" placeholder="e.g., Basmati Rice" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="min-width:120px;">
+                        <label for="inv-category">Category</label>
+                        <select id="inv-category">
+                            <option value="Rice & Dal">Rice & Dal</option>
+                            <option value="Oil">Oil</option>
+                            <option value="Spices">Spices</option>
+                            <option value="Drinks">Drinks</option>
+                            <option value="General">General</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label for="inv-cost">Cost Price (৳)</label>
+                        <input type="number" id="inv-cost" min="0.01" step="0.01" placeholder="Cost">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label for="inv-sell">Sell Price (৳)</label>
+                        <input type="number" id="inv-sell" min="0.01" step="0.01" placeholder="Retail">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label for="inv-unit">Unit Type</label>
+                        <select id="inv-unit">
+                            <option value="pcs">pcs (Pieces)</option>
+                            <option value="kg">kg (Kilograms)</option>
+                            <option value="liter">liter (Liters)</option>
+                            <option value="dozen">dozen</option>
+                            <option value="packet">packet</option>
+                            <option value="bag">bag</option>
+                            <option value="bottle">bottle</option>
+                            <option value="box">box</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label for="inv-stock">Initial Stock</label>
+                        <input type="number" id="inv-stock" min="0" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label for="inv-min-stock">Min Stock Alert</label>
+                        <input type="number" id="inv-min-stock" min="0" value="5" placeholder="5">
+                    </div>
+                    <button class="btn-add" id="btn-add-inventory">+ Add Product</button>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="search-filter-bar">
+                    <input type="text" id="inv-search" class="search-input" placeholder="Search by name or ID...">
+                    <span class="filter-label">Category:</span>
+                    <select id="inv-filter-category"><option value="">All</option></select>
+                    <span class="filter-label">Unit:</span>
+                    <select id="inv-filter-unit">
+                        <option value="">All</option>
+                        <option value="pcs">pcs</option>
+                        <option value="kg">kg</option>
+                        <option value="liter">liter</option>
+                        <option value="dozen">dozen</option>
+                        <option value="packet">packet</option>
+                        <option value="bag">bag</option>
+                        <option value="bottle">bottle</option>
+                        <option value="box">box</option>
+                    </select>
+                    <button class="btn-receipt" id="btn-export-csv-inventory" style="padding: 10px 16px; margin: 0; margin-left: auto;">Export CSV</button>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th class="owner-only">Cost Price</th>
+                                <th>Sell Price</th>
+                                <th class="owner-only">Profit Margin</th>
+                                <th>Stock</th>
+                                <th>Min Stock</th>
+                                <th>Total Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========== PURCHASES =========== -->
+            <section id="purchases" class="page">
+                <!-- Add Purchase Form -->
+                <div class="form-container">
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="pur-date">Purchase Date</label>
+                        <input type="date" id="pur-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="pur-product">Product</label>
+                        <select id="pur-product"><option value="">-- Select Product --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pur-supplier">Supplier</label>
+                        <select id="pur-supplier"><option value="">-- Select Supplier --</option></select>
+                    </div>
+                    <div class="form-group" style="min-width:120px;">
+                        <label for="pur-qty">Quantity</label>
+                        <input type="number" id="pur-qty" min="1" placeholder="Qty">
+                    </div>
+                    <button class="btn-add" id="btn-add-purchase">+ Log Purchase</button>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="search-filter-bar">
+                    <input type="text" id="pur-search" class="search-input" placeholder="Search by product name or ID...">
+                    <span class="filter-label">From:</span>
+                    <input type="date" id="pur-date-from">
+                    <span class="filter-label">To:</span>
+                    <input type="date" id="pur-date-to">
+                    <button class="btn-receipt" id="btn-export-csv-purchases" style="padding: 10px 16px; margin: 0; margin-left: auto;">Export CSV</button>
+                </div>
+
+                <h3 class="section-title"><span class="icon">📦</span> Purchase History</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Supplier</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total Cost</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchases-table"></tbody>
+                    </table>
+                </div>
+
+                <!-- Purchase Returns -->
+                <h3 class="section-title warning-title"><span class="icon">↩️</span> Purchase Returns (Return to Supplier)</h3>
+                <div class="return-form-container">
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="pur-ret-date">Return Date</label>
+                        <input type="date" id="pur-ret-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="pur-ret-product">Product</label>
+                        <select id="pur-ret-product"><option value="">-- Select Product --</option></select>
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label for="pur-ret-qty">Quantity</label>
+                        <input type="number" id="pur-ret-qty" min="1" placeholder="Qty">
+                    </div>
+                    <div class="form-group">
+                        <label for="pur-ret-reason">Reason</label>
+                        <input type="text" id="pur-ret-reason" placeholder="e.g., Damaged goods">
+                    </div>
+                    <button class="btn-return" id="btn-add-purchase-return">↩ Return</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Qty Returned</th>
+                                <th>Cost Credit</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchase-returns-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========== SALES =========== -->
+            <section id="sales" class="page">
+                <!-- POS Grid Layout -->
+                <div class="dashboard-grid" style="margin-bottom: 24px;">
+                    <!-- Cart/POS Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🛒 <span data-i18n="pos-cart-title">Billing Cart</span></span>
+                        </div>
+                        <div class="form-container" style="flex-wrap: nowrap; gap: 8px; margin-bottom: 12px; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="sale-product" data-i18n="pur-product">Product</label>
+                                <select id="sale-product"><option value="">-- Select Product --</option></select>
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width:80px;">
+                                <label for="sale-qty" data-i18n="sale-qty">Quantity</label>
+                                <input type="number" id="sale-qty" min="1" value="1" style="width:100%;">
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn-add" id="btn-add-to-cart" style="padding: 10px 16px; margin: 0; min-height:42px;">+ Add</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Cart Items List -->
+                        <div class="table-container" style="max-height: 220px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="th-name">Product Name</th>
+                                        <th data-i18n="sale-qty" style="text-align:center;">Qty</th>
+                                        <th data-i18n="th-sell">Price</th>
+                                        <th data-i18n="th-val">Total</th>
+                                        <th data-i18n="th-actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cart-table-body">
+                                    <tr><td colspan="5" class="empty-state">Cart is empty. Add items.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkout Details Panel -->
+                    <div class="panel" style="display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div class="panel-header">
+                                <span class="panel-title">💳 <span data-i18n="pay-collect-title">Checkout & Invoice</span></span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="sale-date" data-i18n="sale-date">Sale Date</label>
+                                <input type="date" id="sale-date" style="width:100%;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="sale-customer" data-i18n="sale-customer">Customer</label>
+                                <select id="sale-customer" style="width:100%;"><option value="">-- Walk-in / Cash --</option></select>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                                <div class="form-group" style="flex: 1.2;">
+                                    <label for="sale-discount-type">Discount Type</label>
+                                    <select id="sale-discount-type" style="width:100%;">
+                                        <option value="none">None</option>
+                                        <option value="flat">Flat (৳)</option>
+                                        <option value="percent">Percent (%)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="sale-discount-value">Value</label>
+                                    <input type="number" id="sale-discount-value" min="0" value="0" style="width:100%;">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="sale-seasonal-offer">Seasonal Campaign</label>
+                                <select id="sale-seasonal-offer" style="width:100%;">
+                                    <option value="">None / Regular</option>
+                                    <option value="Eid Mubarak">Eid Mubarak 🌙</option>
+                                    <option value="Pohela Boishakh">Pohela Boishakh 🌾</option>
+                                    <option value="Durga Puja">Durga Puja 🌸</option>
+                                    <option value="Winter Sale">Winter Sale ❄️</option>
+                                    <option value="Black Friday">Black Friday 🖤</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 4px 0;">
+                                <input type="checkbox" id="sale-is-credit" style="width: 20px; height: 20px; cursor: pointer; margin:0;">
+                                <label for="sale-is-credit" style="margin: 0; cursor: pointer; font-size: 0.9rem;" data-i18n="sale-credit">Credit Sale?</label>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+                            <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary);">
+                                    <span>Subtotal:</span>
+                                    <span id="cart-subtotal">৳ 0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--danger);">
+                                    <span>Discount Applied:</span>
+                                    <span id="cart-discount-total">-৳ 0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; color: var(--text-primary); border-top: 1px dashed var(--border-color); padding-top: 6px;">
+                                    <span>Net Grand Total:</span>
+                                    <span id="cart-grand-total">৳ 0</span>
+                                </div>
+                            </div>
+                            <button class="btn-add" id="btn-complete-checkout" style="width: 100%; margin: 0; padding: 12px; font-weight: 700; text-transform: uppercase; background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 4px 15px var(--success-glow);">Complete Checkout 🧾</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="search-filter-bar">
+                    <input type="text" id="sale-search" class="search-input" placeholder="Search by product name or ID...">
+                    <span class="filter-label">From:</span>
+                    <input type="date" id="sale-date-from">
+                    <span class="filter-label">To:</span>
+                    <input type="date" id="sale-date-to">
+                    <button class="btn-receipt" id="btn-export-csv-sales" style="padding: 10px 16px; margin: 0; margin-left: auto;">Export CSV</button>
+                </div>
+
+                <h3 class="section-title"><span class="icon">📈</span> Sales History</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice No</th>
+                                <th>Products & Qty</th>
+                                <th>Customer/Type</th>
+                                <th>Total Revenue</th>
+                                <th class="owner-only">Profit</th>
+                                <th>Receipt</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table"></tbody>
+                    </table>
+                </div>
+
+                <!-- Sales Returns -->
+                <h3 class="section-title warning-title"><span class="icon">↩️</span> Sales Returns (Customer Returns)</h3>
+                <div class="return-form-container">
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="sale-ret-date">Return Date</label>
+                        <input type="date" id="sale-ret-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-ret-product">Product</label>
+                        <select id="sale-ret-product"><option value="">-- Select Product --</option></select>
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label for="sale-ret-qty">Quantity</label>
+                        <input type="number" id="sale-ret-qty" min="1" placeholder="Qty">
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-ret-reason">Reason</label>
+                        <input type="text" id="sale-ret-reason" placeholder="e.g., Defective product">
+                    </div>
+                    <button class="btn-return" id="btn-add-sale-return">↩ Process Return</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Qty Returned</th>
+                                <th>Refund Amount</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-returns-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========== EXPENSES =========== -->
+            <section id="expenses" class="page">
+                <!-- Expense Stats -->
+                <div class="expense-stats">
+                    <div class="stat-card shadow-danger">
+                        <div class="stat-card-icon text-danger">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Expenses</h4>
+                            <div class="stat-card-value" id="exp-stat-total">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-warning">
+                        <div class="stat-card-icon text-warning">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>This Month</h4>
+                            <div class="stat-card-value" id="exp-stat-month">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-primary">
+                        <div class="stat-card-icon text-primary">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Records</h4>
+                            <div class="stat-card-value" id="exp-stat-count">0 Records</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Expense Form -->
+                <div class="form-container">
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="exp-date">Date</label>
+                        <input type="date" id="exp-date">
+                    </div>
+                    <div class="form-group" style="min-width:140px;">
+                        <label for="exp-category">Category</label>
+                        <select id="exp-category">
+                            <option value="Rent">Rent</option>
+                            <option value="Electricity">Electricity</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Supplies">Supplies</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="min-width:130px;">
+                        <label for="exp-amount">Amount (৳)</label>
+                        <input type="number" id="exp-amount" min="0.01" step="0.01" placeholder="Amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="exp-note">Note (Optional)</label>
+                        <input type="text" id="exp-note" placeholder="Description...">
+                    </div>
+                    <button class="btn-add" id="btn-add-expense">+ Add Expense</button>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="search-filter-bar">
+                    <input type="text" id="exp-search" class="search-input" placeholder="Search by note or category...">
+                    <span class="filter-label">Category:</span>
+                    <select id="exp-filter-category">
+                        <option value="">All</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Supplies">Supplies</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <span class="filter-label">From:</span>
+                    <input type="date" id="exp-date-from">
+                    <span class="filter-label">To:</span>
+                    <input type="date" id="exp-date-to">
+                    <button class="btn-receipt" id="btn-export-csv-expenses" style="padding: 10px 16px; margin: 0; margin-left: auto;">Export CSV</button>
+                </div>
+
+                <h3 class="section-title"><span class="icon">💸</span> Expense Records</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Note</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-table"></tbody>
+                    </table>
+                </div>
+
+                <h3 class="section-title" style="margin-top:28px;"><span class="icon">📊</span> Monthly Expense Trend</h3>
+                <div class="panel">
+                    <div class="chart-container" style="height:260px;">
+                        <canvas id="monthlyExpenseChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========== SUPPLIERS =========== -->
+            <section id="suppliers" class="page">
+                <!-- Supplier Stats -->
+                <div class="expense-stats">
+                    <div class="stat-card shadow-primary">
+                        <div class="stat-card-icon text-primary">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Suppliers</h4>
+                            <div class="stat-card-value" id="sup-stat-count">0 Suppliers</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-danger">
+                        <div class="stat-card-icon text-danger">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Outstanding Payments</h4>
+                            <div class="stat-card-value" id="sup-stat-outstanding">৳ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Supplier Form -->
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="sup-name">Supplier Name</label>
+                        <input type="text" id="sup-name" placeholder="e.g., Al-Madina Traders" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="sup-phone">Phone</label>
+                        <input type="text" id="sup-phone" placeholder="e.g., 01700000000" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="sup-address">Address</label>
+                        <input type="text" id="sup-address" placeholder="e.g., Karwan Bazar, Dhaka" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="sup-notes">Notes (Optional)</label>
+                        <input type="text" id="sup-notes" placeholder="e.g., Wholesale pulses" autocomplete="off">
+                    </div>
+                    <button class="btn-add" id="btn-add-supplier">+ Add Supplier</button>
+                </div>
+
+                <!-- Search -->
+                <div class="search-filter-bar">
+                    <input type="text" id="sup-search" class="search-input" placeholder="Search by name, phone or note...">
+                </div>
+
+                <h3 class="section-title"><span class="icon">🏢</span> Suppliers List</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Notes</th>
+                                <th>Outstanding Dues</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliers-table"></tbody>
+                    </table>
+                </div>
+
+                <!-- Purchases per Supplier Panel -->
+                <h3 class="section-title" style="margin-top:28px;"><span class="icon">📦</span> Purchase History from Supplier</h3>
+                <div class="panel">
+                    <div class="form-group" style="max-width:300px; margin-bottom:12px;">
+                        <label for="sup-history-select">Select Supplier to View</label>
+                        <select id="sup-history-select"><option value="">-- Select Supplier --</option></select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product ID</th>
+                                    <th>Product Name</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Cost</th>
+                                    <th>Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplier-purchases-table">
+                                <tr><td colspan="6" class="empty-state">Select a supplier to view their purchase history.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========== CUSTOMERS =========== -->
+            <section id="customers" class="page">
+                <!-- Customer Stats -->
+                <div class="expense-stats">
+                    <div class="stat-card shadow-primary">
+                        <div class="stat-card-icon text-primary">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Customers</h4>
+                            <div class="stat-card-value" id="cust-stat-count">0 Customers</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-danger">
+                        <div class="stat-card-icon text-danger">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Outstanding Dues</h4>
+                            <div class="stat-card-value" id="cust-stat-dues" style="color:var(--danger);">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card shadow-success">
+                        <div class="stat-card-icon text-success">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-card-info">
+                            <h4>Total Collected</h4>
+                            <div class="stat-card-value" id="cust-stat-collected">৳ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Customer Form -->
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="cust-name">Customer Name</label>
+                        <input type="text" id="cust-name" placeholder="e.g., Rafiqul Islam" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="min-width:160px;">
+                        <label for="cust-phone">Phone Number</label>
+                        <input type="text" id="cust-phone" placeholder="e.g., 01800000000" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="cust-address">Address</label>
+                        <input type="text" id="cust-address" placeholder="e.g., Mirpur, Dhaka" autocomplete="off">
+                    </div>
+                    <button class="btn-add" id="btn-add-customer">+ Add Customer</button>
+                </div>
+
+                <!-- Search -->
+                <div class="search-filter-bar">
+                    <input type="text" id="cust-search" class="search-input" placeholder="Search by name, phone or address...">
+                </div>
+
+                <h3 class="section-title"><span class="icon">👥</span> Customers List</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Outstanding Due</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-table"></tbody>
+                    </table>
+                </div>
+
+                <!-- Collect Payment Form -->
+                <h3 class="section-title warning-title" style="margin-top:28px;"><span class="icon">💵</span> Collect Due Payment (বাকি আদায়)</h3>
+                <div class="return-form-container">
+                    <div class="form-group" style="min-width:150px;">
+                        <label for="pay-date">Collection Date</label>
+                        <input type="date" id="pay-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="pay-customer">Select Customer</label>
+                        <select id="pay-customer"><option value="">-- Select Customer --</option></select>
+                    </div>
+                    <div class="form-group" style="min-width:120px;">
+                        <label for="pay-amount">Amount Collected (৳)</label>
+                        <input type="number" id="pay-amount" min="1" placeholder="Amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="pay-note">Note (Optional)</label>
+                        <input type="text" id="pay-note" placeholder="e.g., Partial cash payment">
+                    </div>
+                    <button class="btn-return" id="btn-add-payment">💵 Collect</button>
+                </div>
+
+                <!-- Payments history table -->
+                <h3 class="section-title"><span class="icon">📝</span> Collection Log</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer Name</th>
+                                <th>Amount Collected</th>
+                                <th>Note</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========== RETURNS =========== -->
+            <section id="returns" class="page">
+                <div class="dashboard-grid">
+                    <!-- Sales Returns Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">↩️ Sales Return (Customer Return)</span>
+                        </div>
+                        <div class="form-container" style="margin-bottom:0; padding:15px; border:none; background:transparent; flex-direction:column; align-items:stretch;">
+                            <div class="form-group">
+                                <label for="ret-sale-date">Return Date</label>
+                                <input type="date" id="ret-sale-date" style="width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-sale-product">Product</label>
+                                <select id="ret-sale-product" style="width:100%;"><option value="">-- Select Product --</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-sale-qty">Quantity</label>
+                                <input type="number" id="ret-sale-qty" min="0.01" step="0.01" style="width:100%;" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-sale-amount">Refund Amount (৳)</label>
+                                <input type="number" id="ret-sale-amount" min="0" step="0.01" style="width:100%;" placeholder="৳ 0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-sale-reason">Reason</label>
+                                <input type="text" id="ret-sale-reason" style="width:100%;" placeholder="e.g., Damaged item">
+                            </div>
+                            <button class="btn-return" id="btn-log-sales-return" style="margin-top:15px; width:100%;">Process Customer Return</button>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Returns Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">↩️ Purchase Return (Return to Supplier)</span>
+                        </div>
+                        <div class="form-container" style="margin-bottom:0; padding:15px; border:none; background:transparent; flex-direction:column; align-items:stretch;">
+                            <div class="form-group">
+                                <label for="ret-pur-date">Return Date</label>
+                                <input type="date" id="ret-pur-date" style="width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-pur-product">Product</label>
+                                <select id="ret-pur-product" style="width:100%;"><option value="">-- Select Product --</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-pur-qty">Quantity</label>
+                                <input type="number" id="ret-pur-qty" min="0.01" step="0.01" style="width:100%;" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-pur-amount">Credit/Refund (৳)</label>
+                                <input type="number" id="ret-pur-amount" min="0" step="0.01" style="width:100%;" placeholder="৳ 0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="ret-pur-reason">Reason</label>
+                                <input type="text" id="ret-pur-reason" style="width:100%;" placeholder="e.g., Expired stock">
+                            </div>
+                            <button class="btn-return" id="btn-log-purchase-return" style="margin-top:15px; width:100%;">Process Supplier Return</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title"><span class="icon">📝</span> Returns History Ledger</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Amount</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returns-ledger-table">
+                            <tr><td colspan="7" class="empty-state">No returns logged.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========== REPORTS =========== -->
+            <section id="reports" class="page">
+                <div class="search-filter-bar" style="display:flex; justify-content: space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="filter-label">Month:</span>
+                        <input type="month" id="report-month-selector" style="min-width:180px;">
+                        <button class="btn-add" id="btn-load-report" style="padding: 8px 16px; margin:0;">Generate</button>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-pdf" id="btn-export-full-report" style="margin:0;">Export Full PDF</button>
+                        <button class="btn-receipt" id="btn-export-csv-products" style="padding:8px 16px; margin:0;">Export CSV</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-cards" style="margin-top:20px;">
+                    <div class="card">
+                        <div class="card-icon">৳</div>
+                        <div class="card-details">
+                            <h3>Total Sales</h3>
+                            <div class="amount" id="rep-total-sales">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card danger">
+                        <div class="card-icon">৳</div>
+                        <div class="card-details">
+                            <h3>Total Purchases</h3>
+                            <div class="amount" id="rep-total-purchases">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card warning">
+                        <div class="card-icon">৳</div>
+                        <div class="card-details">
+                            <h3>Total Expenses</h3>
+                            <div class="amount" id="rep-total-expenses">৳ 0</div>
+                        </div>
+                    </div>
+                    <div class="card success">
+                        <div class="card-icon">৳</div>
+                        <div class="card-details">
+                            <h3>Net Profit</h3>
+                            <div class="amount" id="rep-net-profit">৳ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="margin-top: 24px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🏆 Top Selling Products (This Month)</span>
+                        </div>
+                        <div class="table-container" style="margin-bottom:0; border:none;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Qty Sold</th>
+                                        <th>Revenue</th>
+                                        <th>Profit Contribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rep-top-selling-table">
+                                    <tr><td colspan="4" class="empty-state">No sales in this month.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">📈 6-Month Sales Comparison</span>
+                        </div>
+                        <div class="chart-container" style="height:260px;">
+                            <canvas id="reportsMoMChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discount & Seasonal Campaign Report -->
+                <div class="panel" style="margin-top: 24px;">
+                    <div class="panel-header">
+                        <span class="panel-title">🏷️ Discounts & Seasonal Campaigns</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:15px;">
+                        Performance of promotional campaigns and total discounts given during the selected month.
+                    </p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Campaign Tag</th>
+                                    <th>Total Transactions</th>
+                                    <th>Total Discounts Given</th>
+                                    <th>Sales Generated</th>
+                                    <th>Details (Invoice List)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-discounts-table">
+                                <tr><td colspan="5" class="empty-state">No discounts or campaigns recorded.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========== SETTINGS =========== -->
+            <section id="settings" class="page">
+                <div class="dashboard-grid">
+                    <!-- Shop Information Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🏪 Shop Information</span>
+                        </div>
+                        <form id="settings-shop-form" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                            <div class="form-group">
+                                <label for="shop-name-input">Shop Name</label>
+                                <input type="text" id="shop-name-input" required placeholder="RetailFlow Store">
+                            </div>
+                            <div class="form-group">
+                                <label for="shop-owner-input">Owner Name</label>
+                                <input type="text" id="shop-owner-input" placeholder="Owner Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="shop-address-input">Address</label>
+                                <input type="text" id="shop-address-input" placeholder="Shop Address">
+                            </div>
+                            <div class="form-group">
+                                <label for="shop-phone-input">Phone Number</label>
+                                <input type="text" id="shop-phone-input" placeholder="Phone Number">
+                            </div>
+                            <button type="submit" class="btn-add" style="align-self:flex-start; margin-top:10px;">Save Shop Info</button>
+                        </form>
+                    </div>
+
+                    <!-- User Management & Invitations Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">👥 User Management (Invite Staff)</span>
+                        </div>
+                        <form id="settings-invite-form" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                            <div class="form-group">
+                                <label for="invite-email">Staff Email Address</label>
+                                <input type="email" id="invite-email" required placeholder="staff@retailflow.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="invite-role">Assign Role</label>
+                                <select id="invite-role">
+                                    <option value="cashier">Cashier (POS checkout & inventory view)</option>
+                                    <option value="viewer">Viewer (Read-only Dashboard & Reports)</option>
+                                    <option value="owner">Co-Owner (Full access)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-add" style="align-self:flex-start; margin-top:10px;">Send Invitation</button>
+                        </form>
+                        
+                        <h4 style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-top:20px; border-bottom:1px solid var(--border-color); padding-bottom:6px;">Active Shop Staff</h4>
+                        <div class="table-container" style="border:none; margin-top:10px; max-height: 180px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="settings-users-table">
+                                    <tr><td colspan="3" class="empty-state">Loading staff...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup & Import Panel -->
+                <div class="panel" style="margin-top:24px;">
+                    <div class="panel-header">
+                        <span class="panel-title">💾 Backup & Ledger Restore</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:15px;">
+                        Export all your cloud ledger data (Products, Customers, Sales, Expenses, Suppliers, Returns) as a backup JSON file, or restore from a previous JSON export.
+                    </p>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:15px;">
+                        <strong>Last Backup:</strong> <span id="last-backup-date-display" style="color:var(--text-primary); font-weight:600;">Never</span>
+                    </p>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items: center;">
+                        <button class="btn-add" id="btn-backup-export" style="background:var(--primary); margin:0;">Export Full JSON Backup</button>
+                        
+                        <div style="display:flex; align-items:center; gap:8px; border: 1px dashed var(--border-color); padding: 5px 12px; border-radius: 8px;">
+                            <input type="file" id="backup-import-file" accept=".json" style="display:none;">
+                            <button class="btn-receipt" style="margin:0;" onclick="document.getElementById('backup-import-file').click()">Select Backup File</button>
+                            <button class="btn-return" id="btn-backup-import" style="padding:10px 16px; margin:0;">Restore Backup ⚠️</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Scripts loaded sequentially (non-module for file:// compatibility) -->
+    <script src="js/lang.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/purchases.js"></script>
+    <script src="js/sales.js"></script>
+    <script src="js/expenses.js"></script>
+    <script src="js/suppliers.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/returns.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

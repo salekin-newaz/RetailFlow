@@ -1,0 +1,12 @@
+{
+  "name": "retailflow",
+  "version": "1.0.0",
+  "description": "RetailFlow - Premium Shop Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
