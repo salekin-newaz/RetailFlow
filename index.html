@@ -105,20 +105,52 @@
                         Logout
                     </button>
                 </div>
+
+                <!-- Guest / Login Switcher Button -->
+                <div id="guest-login-widget" style="display: none; align-items: center; gap: 8px;">
+                    <button id="btn-login-trigger" style="background: linear-gradient(135deg, var(--primary), #a855f7); border: none; color: white; padding: 7px 14px; font-size: 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; gap: 6px;">
+                        <span>Login / Signup 🔑</span>
+                    </button>
+                </div>
             </div>
         </header>
 
         <div class="content-body">
 
-            <!-- =========== LOGIN PAGE =========== -->
-            <section id="login" class="page active" style="max-width: 440px; margin: 40px auto; padding: 20px;">
-                <div style="background: var(--bg-surface); backdrop-filter: blur(var(--card-blur)); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+            <!-- =========== LOGIN MODAL OVERLAY =========== -->
+            <div id="login-modal" style="
+                position: fixed;
+                top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(15, 23, 42, 0.8);
+                backdrop-filter: blur(10px);
+                display: none;
+                align-items: center; justify-content: center;
+                z-index: 100000;
+                padding: 20px;
+            ">
+                <div style="background: var(--bg-surface); backdrop-filter: blur(var(--card-blur)); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.4); max-width: 440px; width: 100%; position: relative;">
+                    <!-- Close button for Guest Browsing -->
+                    <button id="btn-close-login-modal" style="
+                        position: absolute;
+                        top: 15px; right: 15px;
+                        background: rgba(255,255,255,0.05);
+                        border: 1px solid var(--border-color);
+                        color: var(--text-secondary);
+                        border-radius: 50%;
+                        width: 32px; height: 32px;
+                        font-size: 1.2rem; font-weight: 700;
+                        cursor: pointer;
+                        display: flex; align-items: center; justify-content: center;
+                        transition: var(--transition);
+                        border: none;
+                    ">×</button>
+
                     <div style="text-align: center; margin-bottom: 25px;">
                         <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; box-shadow: 0 4px 12px var(--primary-glow);">
                             <svg style="width:26px; height:26px; color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                         </div>
                         <h2 style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 800; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">RetailFlow</h2>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Sign in to access your shop dashboard</p>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Sign in to access your shop database</p>
                     </div>
 
                     <form id="login-form" style="display: flex; flex-direction: column; gap: 16px;">
@@ -152,7 +184,7 @@
                             <input type="password" id="signup-password" required placeholder="••••••••">
                         </div>
                         
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: -4px;">
+                        <div style="display: flex; justify-content: justify; font-size: 0.8rem; margin-top: -4px;">
                             <span style="color: var(--primary-light); cursor: pointer;" id="btn-toggle-login">Already have an account? Log In</span>
                         </div>
 
@@ -195,7 +227,7 @@
                         </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
             <!-- =========== DASHBOARD =========== -->
             <section id="dashboard" class="page">

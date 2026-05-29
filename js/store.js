@@ -138,27 +138,44 @@ class AppStore {
 
             if (session) {
                 this.user = session.user;
+                this.isGuest = false;
                 await this.loadUserProfileAndBootstrap();
             } else {
-                this.showLoginView();
+                // Not logged in -> Boot in Guest Mode using beautiful offline mock data!
+                console.log("No active remote session. Booting in Guest Mode.");
+                this.isGuest = true;
+                this.isMock = true;
+                this.setupMockClient();
+                await this.loadAllData();
+                this.showGuestView();
             }
 
             // Register global auth state change listener
             window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 if (session) {
                     this.user = session.user;
+                    this.isGuest = false;
                     if (!this.profile) {
                         await this.loadUserProfileAndBootstrap();
                     }
                 } else {
-                    this.showLoginView();
+                    console.log("Session lost. Booting in Guest Mode.");
+                    this.isGuest = true;
+                    this.isMock = true;
+                    this.setupMockClient();
+                    await this.loadAllData();
+                    this.showGuestView();
                 }
             });
 
         } catch (err) {
             console.error("Initialization error:", err);
-            window.showToast("Connection/Session error: " + err.message, "error");
-            this.showLoginView();
+            console.log("Error loading remote session. Booting in Guest Mode.");
+            this.isGuest = true;
+            this.isMock = true;
+            this.setupMockClient();
+            await this.loadAllData();
+            this.showGuestView();
         } finally {
             this.isLoading = false;
             this.notify();
@@ -166,22 +183,46 @@ class AppStore {
     }
 
     showLoginView() {
-        this.user = null;
-        this.profile = null;
-        this.shop = null;
-        
-        // Hide workspace wrapper and display Login
+        this.showLoginModal();
+    }
+
+    showLoginModal() {
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    hideLoginModal() {
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    showGuestView() {
+        this.isGuest = true;
+        this.isMock = true;
+
         const sidebar = document.querySelector('.sidebar');
         const topBar = document.querySelector('.top-bar');
         const userWidget = document.getElementById('user-profile-widget');
-        
-        if (sidebar) sidebar.style.display = 'none';
-        if (topBar) topBar.style.display = 'none';
-        if (userWidget) userWidget.style.display = 'none';
+        const guestWidget = document.getElementById('guest-login-widget');
 
-        // Toggle active page to Login
+        if (sidebar) sidebar.style.display = 'flex';
+        if (topBar) topBar.style.display = 'flex';
+        if (userWidget) userWidget.style.display = 'none';
+        if (guestWidget) guestWidget.style.display = 'flex';
+
+        // Set default page to dashboard
         const pages = document.querySelectorAll('.page');
-        pages.forEach(p => p.classList.toggle('active', p.id === 'login'));
+        pages.forEach(p => p.classList.toggle('active', p.id === 'dashboard'));
+
+        const topBarTitle = document.getElementById('topbar-title');
+        if (topBarTitle) {
+            const activeNode = document.querySelector(`.nav-links li[data-tab="dashboard"]`);
+            if (activeNode) {
+                topBarTitle.innerText = activeNode.querySelector('span').innerText;
+                const navs = document.querySelectorAll('.nav-links li');
+                navs.forEach(n => n.classList.toggle('active', n.getAttribute('data-tab') === 'dashboard'));
+            }
+        }
     }
 
     showAppView() {
@@ -194,11 +235,14 @@ class AppStore {
         const sidebar = document.querySelector('.sidebar');
         const topBar = document.querySelector('.top-bar');
         const userWidget = document.getElementById('user-profile-widget');
+        const guestWidget = document.getElementById('guest-login-widget');
         const nameLabel = document.getElementById('nav-user-name');
         const roleLabel = document.getElementById('nav-user-role');
 
         if (sidebar) sidebar.style.display = 'flex';
         if (topBar) topBar.style.display = 'flex';
+        if (guestWidget) guestWidget.style.display = 'none';
+        this.isGuest = false;
         
         if (userWidget && this.profile) {
             userWidget.style.display = 'flex';
@@ -334,7 +378,7 @@ class AppStore {
                     "Please make sure you have executed the full 'schema.sql' file inside your Supabase project's SQL Editor.";
             }
             
-            this.showLoginView();
+            this.showGuestView();
         }
     }
 
@@ -591,10 +635,14 @@ class AppStore {
 
     async loadAllData() {
         if (this.isMock) {
-            const shopId = this.profile.shop_id;
+            const shopId = this.profile ? this.profile.shop_id : 'guest-shop-id';
             
             // Load Products
-            const products = await this.getLocalItem('rf_mock_products', '[]');
+            let products = await this.getLocalItem('rf_mock_products', '[]');
+            if (products.length === 0) {
+                await this.seedMockData(shopId);
+                products = await this.getLocalItem('rf_mock_products', '[]');
+            }
             this.inventory = products.filter(p => p.shop_id === shopId).map(p => ({
                 uuid: p.id,
                 id: p.product_code,
@@ -921,8 +969,74 @@ class AppStore {
         }
         localStorage.removeItem('rf_supabase_url');
         localStorage.removeItem('rf_supabase_key');
-        this.showLoginView();
+        localStorage.removeItem('rf_supabase_reset');
+        this.user = null;
+        this.profile = null;
+        this.shop = null;
+        this.isGuest = true;
+        this.isMock = true;
         window.location.reload();
+    }
+
+    async seedMockData(shopId) {
+        console.log("Seeding beautiful guest/demo mockup data...");
+        const products = [
+            { id: 'mock-p1', shop_id: shopId, product_code: 'PROD-101', name: 'Premium Coffee Beans', category: 'Beverages', cost_price: 12.00, selling_price: 19.99, stock: 45.0, unit_type: 'packet', low_stock_threshold: 10 },
+            { id: 'mock-p2', shop_id: shopId, product_code: 'PROD-102', name: 'Organic Green Tea', category: 'Beverages', cost_price: 4.50, selling_price: 8.50, stock: 60.0, unit_type: 'box', low_stock_threshold: 10 },
+            { id: 'mock-p3', shop_id: shopId, product_code: 'PROD-103', name: 'Chocolate Chip Cookies', category: 'Snacks', cost_price: 2.20, selling_price: 4.99, stock: 8.0, unit_type: 'box', low_stock_threshold: 15 },
+            { id: 'mock-p4', shop_id: shopId, product_code: 'PROD-104', name: 'Whole Grain Oats', category: 'Grocery', cost_price: 3.10, selling_price: 5.50, stock: 120.0, unit_type: 'bag', low_stock_threshold: 20 },
+            { id: 'mock-p5', shop_id: shopId, product_code: 'PROD-105', name: 'Fresh Almond Milk', category: 'Dairy', cost_price: 1.80, selling_price: 3.49, stock: 25.0, unit_type: 'bottle', low_stock_threshold: 8 },
+            { id: 'mock-p6', shop_id: shopId, product_code: 'PROD-106', name: 'Extra Virgin Olive Oil', category: 'Grocery', cost_price: 8.00, selling_price: 14.99, stock: 30.0, unit_type: 'bottle', low_stock_threshold: 5 },
+            { id: 'mock-p7', shop_id: shopId, product_code: 'PROD-107', name: 'Natural Honey Jar', category: 'Grocery', cost_price: 6.50, selling_price: 11.99, stock: 18.0, unit_type: 'pcs', low_stock_threshold: 5 },
+            { id: 'mock-p8', shop_id: shopId, product_code: 'PROD-108', name: 'Crunchy Peanut Butter', category: 'Snacks', cost_price: 2.80, selling_price: 5.25, stock: 40.0, unit_type: 'pcs', low_stock_threshold: 10 },
+            { id: 'mock-p9', shop_id: shopId, product_code: 'PROD-109', name: 'Dark Chocolate Bar', category: 'Snacks', cost_price: 1.50, selling_price: 3.50, stock: 85.0, unit_type: 'pcs', low_stock_threshold: 20 },
+            { id: 'mock-p10', shop_id: shopId, product_code: 'PROD-110', name: 'Basmati Rice 5kg', category: 'Grocery', cost_price: 9.00, selling_price: 15.99, stock: 50.0, unit_type: 'bag', low_stock_threshold: 10 }
+        ];
+
+        const suppliers = [
+            { id: 'mock-s1', shop_id: shopId, name: 'Apex Foods Distributors', phone: '+8801711223344', address: 'Tejgaon, Dhaka', notes: 'Primary supplier for snacks and beverages' },
+            { id: 'mock-s2', shop_id: shopId, name: 'Greenfield Organic Farm', phone: '+8801811556677', address: 'Savar, Dhaka', notes: 'Supplier for honey, oats, and organic tea' },
+            { id: 'mock-s3', shop_id: shopId, name: 'Euro Imports Ltd', phone: '+8801911889900', address: 'Gulshan, Dhaka', notes: 'Premium olive oil and coffee beans supplier' }
+        ];
+
+        const customers = [
+            { id: 'mock-c1', shop_id: shopId, name: 'Alice Vance', phone: '01700112233', total_due: 150.00 },
+            { id: 'mock-c2', shop_id: shopId, name: 'Bob Johnson', phone: '01800445566', total_due: 0.00 },
+            { id: 'mock-c3', shop_id: shopId, name: 'Charlie Miller', phone: '01900778899', total_due: 45.50 },
+            { id: 'mock-c4', shop_id: shopId, name: 'Diana Ross', phone: '01500224466', total_due: 0.00 }
+        ];
+
+        const expenses = [
+            { id: 'mock-e1', shop_id: shopId, category: 'Rent', amount: 500.00, note: 'Monthly store rent for May', expense_date: '2026-05-01' },
+            { id: 'mock-e2', shop_id: shopId, category: 'Electricity', amount: 120.00, note: 'Electricity bill for shop', expense_date: '2026-05-15' },
+            { id: 'mock-e3', shop_id: shopId, category: 'Salary', amount: 300.00, note: 'Part-time assistant salary', expense_date: '2026-05-28' },
+            { id: 'mock-e4', shop_id: shopId, category: 'Transport', amount: 45.00, note: 'Delivery van fuel', expense_date: '2026-05-26' },
+            { id: 'mock-e5', shop_id: shopId, category: 'Supplies', amount: 35.00, note: 'Paper bags and POS receipt rolls', expense_date: '2026-05-25' }
+        ];
+
+        const purchases = [
+            { id: 'mock-pu1', shop_id: shopId, product_id: 'mock-p1', supplier_id: 'mock-s3', quantity: 50, cost_per_unit: 12.00, total_cost: 600.00, purchase_date: '2026-05-20', notes: 'Initial premium stock import' },
+            { id: 'mock-pu2', shop_id: shopId, product_id: 'mock-p2', supplier_id: 'mock-s2', quantity: 80, cost_per_unit: 4.50, total_cost: 360.00, purchase_date: '2026-05-21', notes: 'Fresh farm collection' },
+            { id: 'mock-pu3', shop_id: shopId, product_id: 'mock-p3', supplier_id: 'mock-s1', quantity: 20, cost_per_unit: 2.20, total_cost: 44.00, purchase_date: '2026-05-22', notes: 'Weekly snack delivery' },
+            { id: 'mock-pu4', shop_id: shopId, product_id: 'mock-p6', supplier_id: 'mock-s3', quantity: 40, cost_per_unit: 8.00, total_cost: 320.00, purchase_date: '2026-05-24', notes: 'Premium cooking oil replenishment' }
+        ];
+
+        const sales = [
+            { id: 'mock-sa1', shop_id: shopId, invoice_no: 'INV-2026-001', product_id: 'mock-p1', customer_id: 'mock-c1', quantity: 2, unit_price: 19.99, discount_amount: 0, total_revenue: 39.98, estimated_profit: 15.98, is_credit: false, amount_paid: 39.98, seasonal_offer: 'None', sale_date: '2026-05-23', created_at: '2026-05-23T10:00:00Z' },
+            { id: 'mock-sa2', shop_id: shopId, invoice_no: 'INV-2026-002', product_id: 'mock-p3', customer_id: 'mock-c2', quantity: 5, unit_price: 4.99, discount_amount: 1.00, total_revenue: 23.95, estimated_profit: 11.95, is_credit: false, amount_paid: 23.95, seasonal_offer: 'None', sale_date: '2026-05-23', created_at: '2026-05-23T14:30:00Z' },
+            { id: 'mock-sa3', shop_id: shopId, invoice_no: 'INV-2026-003', product_id: 'mock-p2', customer_id: null, quantity: 4, unit_price: 8.50, discount_amount: 0, total_revenue: 34.00, estimated_profit: 16.00, is_credit: false, amount_paid: 34.00, seasonal_offer: 'None', sale_date: '2026-05-24', created_at: '2026-05-24T09:15:00Z' },
+            { id: 'mock-sa4', shop_id: shopId, invoice_no: 'INV-2026-004', product_id: 'mock-p4', customer_id: 'mock-c3', quantity: 3, unit_price: 5.50, discount_amount: 2.00, total_revenue: 14.50, estimated_profit: 7.20, is_credit: false, amount_paid: 14.50, seasonal_offer: 'None', sale_date: '2026-05-24', created_at: '2026-05-24T12:00:00Z' },
+            { id: 'mock-sa5', shop_id: shopId, invoice_no: 'INV-2026-005', product_id: 'mock-p5', customer_id: 'mock-c4', quantity: 4, unit_price: 3.49, discount_amount: 1.00, total_revenue: 12.96, estimated_profit: 5.76, is_credit: false, amount_paid: 12.96, seasonal_offer: 'None', sale_date: '2026-05-29', created_at: '2026-05-29T16:45:00Z' }
+        ];
+
+        await this.setLocalItem('rf_mock_products', products);
+        await this.setLocalItem('rf_mock_suppliers', suppliers);
+        await this.setLocalItem('rf_mock_customers', customers);
+        await this.setLocalItem('rf_mock_expenses', expenses);
+        await this.setLocalItem('rf_mock_purchases', purchases);
+        await this.setLocalItem('rf_mock_sales', sales);
+        await this.setLocalItem('rf_mock_returns', []);
+        await this.setLocalItem('rf_mock_payments', []);
     }
 
     // ==========================================

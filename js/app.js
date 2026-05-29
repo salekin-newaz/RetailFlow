@@ -119,11 +119,26 @@ function initAuthUiHandlers() {
     const signupForm = document.getElementById('signup-form');
     const btnLogout = document.getElementById('btn-logout');
 
+    const loginTriggerBtn = document.getElementById('btn-login-trigger');
+    if (loginTriggerBtn) {
+        loginTriggerBtn.addEventListener('click', () => {
+            window.store.showLoginModal();
+        });
+    }
+
+    const closeLoginBtn = document.getElementById('btn-close-login-modal');
+    if (closeLoginBtn) {
+        closeLoginBtn.addEventListener('click', () => {
+            window.store.hideLoginModal();
+        });
+    }
+
     const diagOfflineBtn = document.getElementById('btn-diagnostics-run-offline');
     if (diagOfflineBtn) {
         diagOfflineBtn.addEventListener('click', () => {
             localStorage.setItem('rf_supabase_url', 'local_mock');
             localStorage.setItem('rf_supabase_key', 'local_mock');
+            localStorage.removeItem('rf_supabase_reset');
             window.location.reload();
         });
     }
@@ -166,6 +181,7 @@ function initAuthUiHandlers() {
                 // Bootstrap
                 window.store.user = data.user;
                 await window.store.loadUserProfileAndBootstrap();
+                window.store.hideLoginModal();
 
             } catch (err) {
                 window.showToast("Sign in failed: " + err.message, "error");
@@ -237,6 +253,7 @@ function initAuthUiHandlers() {
 
                 // Save temporary profile name & bootstrap onboarding wizard
                 window.store.user = data.user;
+                window.store.hideLoginModal();
                 window.store.renderOnboardingWizard();
                 
                 // Prefill name in onboarding
