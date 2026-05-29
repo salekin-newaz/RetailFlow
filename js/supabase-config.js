@@ -10,7 +10,15 @@
     window.supabaseKey = storedKey || '';
     window.supabaseClient = null;
 
-    if (window.supabaseUrl && window.supabaseKey && window.supabase) {
+    if (storedUrl === 'local_mock') {
+        // Safe mock placeholder to prevent setup wizard overlay on boot
+        window.supabaseClient = {
+            auth: {
+                getSession: async () => ({ data: { session: null }, error: null }),
+                onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+            }
+        };
+    } else if (window.supabaseUrl && window.supabaseKey && window.supabase) {
         try {
             window.supabaseClient = window.supabase.createClient(window.supabaseUrl, window.supabaseKey);
         } catch (e) {
@@ -231,7 +239,11 @@
                 setTimeout(() => window.location.reload(), 1000);
 
             } catch (err) {
-                alert("❌ Connection Test Failed!\n\n" + err.message + "\n\nPlease verify that your Project URL and Anon API Key are correct and that your database schema has been initialized.");
+                let errorMsg = err.message;
+                if (window.location.protocol === 'file:') {
+                    errorMsg += "\n\n💡 TIP: You are running the app directly from a local file (file://). Modern web browsers block external network requests (like connecting to Supabase) from raw local files due to strict security sandbox rules. Please run the app through a local web server (such as Live Server, 'npm start', or Node.js) to resolve this!";
+                }
+                alert("❌ Connection Test Failed!\n\n" + errorMsg + "\n\nPlease verify that your Project URL and Anon API Key are correct and that your database schema has been initialized.");
                 submitBtn.innerText = "Connect Backend 🚀";
                 submitBtn.disabled = false;
             }
