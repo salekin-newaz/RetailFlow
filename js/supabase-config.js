@@ -3,8 +3,20 @@
  */
 
 (function() {
-    const storedUrl = localStorage.getItem('rf_supabase_url');
-    const storedKey = localStorage.getItem('rf_supabase_key');
+    const defaultUrl = 'https://pxgkqcajhcimybrzerfa.supabase.co';
+    const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4Z2txY2FqaGNpbXlicnplcmZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTAwNTYsImV4cCI6MjA5NTQ2NjA1Nn0.zPok6wm3SQVmTpUTqgM3UCE2tx_MaNdoq_wp0r1B_pA';
+
+    let storedUrl = localStorage.getItem('rf_supabase_url');
+    let storedKey = localStorage.getItem('rf_supabase_key');
+    const isReset = localStorage.getItem('rf_supabase_reset') === 'true';
+
+    // First boot auto-configuration
+    if (!storedUrl && !storedKey && !isReset) {
+        localStorage.setItem('rf_supabase_url', defaultUrl);
+        localStorage.setItem('rf_supabase_key', defaultKey);
+        storedUrl = defaultUrl;
+        storedKey = defaultKey;
+    }
 
     window.supabaseUrl = storedUrl || '';
     window.supabaseKey = storedKey || '';
@@ -44,6 +56,7 @@
                     if (confirm("⚠️ Are you sure you want to reset your Supabase project connection?\n\nThis will clear your local connection settings and allow you to reconfigure the URL and API key.")) {
                         localStorage.removeItem('rf_supabase_url');
                         localStorage.removeItem('rf_supabase_key');
+                        localStorage.setItem('rf_supabase_reset', 'true');
                         window.location.reload();
                     }
                 });
@@ -201,6 +214,7 @@
             runOfflineBtn.addEventListener('click', () => {
                 localStorage.setItem('rf_supabase_url', 'local_mock');
                 localStorage.setItem('rf_supabase_key', 'local_mock');
+                localStorage.removeItem('rf_supabase_reset');
                 window.location.reload();
             });
         }
@@ -230,6 +244,7 @@
                 // Save successful connection
                 localStorage.setItem('rf_supabase_url', urlVal);
                 localStorage.setItem('rf_supabase_key', keyVal);
+                localStorage.removeItem('rf_supabase_reset');
                 
                 if (window.showToast) {
                     window.showToast("Connection saved! Reloading...", "success");
