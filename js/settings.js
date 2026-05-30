@@ -117,7 +117,7 @@ async function handleJSONBackupExport() {
     const backupData = {
         retailflow_ledger_version: "2.0-cloud",
         exported_at: new Date().toISOString(),
-        shop_id: window.store.profile.shop_id,
+        shop_id: window.store.profile ? window.store.profile.shop_id : 'guest-shop-id',
         shop_name: window.store.shop ? window.store.shop.name : 'Store',
         
         // Include raw cached operational arrays
@@ -200,7 +200,7 @@ async function handleJSONBackupRestore() {
             const data = JSON.parse(e.target.result);
             if (!data.products) throw new Error("Invalid backup format: Missing products list.");
 
-            const shopId = window.store.profile.shop_id;
+            const shopId = window.store.profile ? window.store.profile.shop_id : 'guest-shop-id';
 
             if (window.store.isMock) {
                 window.showToast("Restoring backup database locally...", "info");
